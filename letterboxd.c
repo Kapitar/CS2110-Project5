@@ -139,6 +139,9 @@ int add_movie(Watchlist *watchlist, Movie *movie, int dayAdded) {
         if (cur_node->movie->name == movie->name && 
             cur_node->movie->director == movie->director &&
             cur_node->movie->releaseYear == movie->releaseYear) {
+            free(new_node->movie->name);
+            free(new_node->movie->director);
+            free(new_node->movie);
             free(new_node);
             return FAILURE;
         }
@@ -186,6 +189,9 @@ int remove_movie(Watchlist *watchlist, Movie *movie) {
                 next_node->prev = prev_node;
             }
 
+            free(cur_node->movie->name);
+            free(cur_node->movie->director);
+            free(cur_node->movie);
             free(cur_node);
             return SUCCESS;
         }
