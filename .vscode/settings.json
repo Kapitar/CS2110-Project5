@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.css": "tailwindcss",
+    "letterboxd.h": "c"
+  }
+}

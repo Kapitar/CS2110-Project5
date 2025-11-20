@@ -1,7 +1,7 @@
 /**
  * CS 2110 - Fall 2025 - Project 5
  *
- * @author YOUR NAME HERE
+ * @author Artem Kim
  */
 
 #include "letterboxd.h"
@@ -21,10 +21,20 @@ Heap *reviewList;
  * @return NULL upon invalid arguments or malloc failure, a pointer to the new movie otherwise
  */
 Movie *create_movie(char *name, char *director, int releaseYear){
-    UNUSED(name);
-    UNUSED(director);
-    UNUSED(releaseYear);
-    return INCOMPLETE_PTR;
+    if (name == NULL || director == NULL || releaseYear < 0) {
+        return NULL;
+    }
+
+    Movie* new_movie = (Movie*) malloc(sizeof(Movie));
+    if (new_movie == NULL) {
+        return NULL;
+    }
+
+    new_movie->name = name;
+    new_movie->director = director;
+    new_movie->releaseYear = releaseYear;
+
+    return new_movie;
 }
 
 /**
@@ -36,9 +46,19 @@ Movie *create_movie(char *name, char *director, int releaseYear){
  * @return NULL upon invalid arguments or malloc failure, a pointer to the new review otherwise
  */
 Review *create_review(Movie *movie, int rating) {
-    UNUSED(movie);
-    UNUSED(rating);
-    return INCOMPLETE_PTR;
+    if (movie == NULL || rating <= 0 || rating > 10) {
+        return NULL;
+    }
+
+    Review* new_review = (Review*) malloc(sizeof(Review));
+    if (new_review == NULL) {
+        return NULL;
+    }
+    
+    new_review->reviewedMovie = movie;
+    new_review->rating = rating;
+    
+    return new_review;
 }
 
 /** 
@@ -49,8 +69,18 @@ Review *create_review(Movie *movie, int rating) {
  * @return NULL upon invalid arguments or malloc failure, a pointer to the new review otherwise
  */
 Watchlist *create_watchlist(char *owner) {
-    UNUSED(owner);
-    return INCOMPLETE_PTR;
+    if (owner == NULL || *owner == '\0') {
+        return NULL;
+    }
+
+    Watchlist* new_watchlist = (Watchlist*) malloc(sizeof(Watchlist));
+    if (new_watchlist == NULL) {
+        return NULL;
+    }
+    new_watchlist->owner = owner;
+    new_watchlist->head = NULL;
+    
+    return new_watchlist;
 }
 
 /**
@@ -61,8 +91,16 @@ Watchlist *create_watchlist(char *owner) {
  * @return FAILURE upon malloc failure or invalid initial capacity and SUCCESS otherwise
  */
 int initialize_heap(int initialCapacity) {
-    UNUSED(initialCapacity);
-    return INCOMPLETE;
+    if (initialCapacity <= 0) {
+        return FAILURE;
+    }
+
+    reviewList = (Heap*) malloc(initialCapacity * sizeof(Review*));
+    if (reviewList == NULL) {
+        return FAILURE;
+    }
+
+    return SUCCESS;
 }
 
 
@@ -78,10 +116,39 @@ int initialize_heap(int initialCapacity) {
  * @return FAILURE upon malloc failure, invalid inputs, or duplicate movie and SUCCESS otherwise
  */
 int add_movie(Watchlist *watchlist, Movie *movie, int dayAdded) {
-    UNUSED(watchlist);
-    UNUSED(movie);
-    UNUSED(dayAdded);
-    return INCOMPLETE;
+    if (watchlist == NULL || movie == NULL || dayAdded <= 0) {
+        return FAILURE;
+    }
+
+    WatchlistNode* new_node = (WatchlistNode*) malloc(sizeof(Watchlist));
+    if (new_node == NULL) {
+        return FAILURE;
+    }
+    new_node->dayAdded = dayAdded;
+    new_node->movie = movie;
+    new_node->next = NULL;
+    new_node->prev = NULL;
+
+    WatchlistNode* cur_node = watchlist->head;
+    if (cur_node == NULL) {
+        watchlist->head = new_node;
+        return SUCCESS;
+    }
+
+    while (cur_node->next != NULL) {
+        if (cur_node->movie->name == movie->name && 
+            cur_node->movie->director == movie->director &&
+            cur_node->movie->releaseYear == movie->releaseYear) {
+            free(new_node);
+            return FAILURE;
+        }
+        cur_node = cur_node->next;
+    }
+
+    cur_node->next = new_node;    
+    new_node->prev = cur_node;
+
+    return SUCCESS;
 }
 
 /**
@@ -93,9 +160,38 @@ int add_movie(Watchlist *watchlist, Movie *movie, int dayAdded) {
  * @return FAILURE upon invalid inputs, or movie not in watchlist and SUCCESS otherwise
  */
 int remove_movie(Watchlist *watchlist, Movie *movie) {
-    UNUSED(watchlist);
-    UNUSED(movie);
-    return INCOMPLETE;
+    if (watchlist == NULL || movie == NULL) {
+        return FAILURE;
+    }
+
+    WatchlistNode* cur_node = watchlist->head;
+    if (cur_node == NULL) {
+        return FAILURE;
+    }
+
+    // 1 -> 2 -> 3
+    // 2 -> 1
+    // 2
+    while (cur_node != NULL) {
+        if (cur_node->movie->name == movie->name && 
+            cur_node->movie->director == movie->director &&
+            cur_node->movie->releaseYear == movie->releaseYear) {
+            WatchlistNode* prev_node = cur_node->prev;
+            WatchlistNode* next_node = cur_node->next;
+
+            if (prev_node != NULL) {
+                prev_node->next = next_node;
+            }
+            if (next_node != NULL) {
+                next_node->prev = prev_node;
+            }
+
+            free(cur_node);
+            return SUCCESS;
+        }
+    }
+    
+    return FAILURE;
 }
 
 /**
@@ -107,9 +203,22 @@ int remove_movie(Watchlist *watchlist, Movie *movie) {
  * @return FAILURE upon invalid inputs, or movie not in watchlist and SUCCESS otherwise
  */
 int watchlist_contains_movie(Watchlist *watchlist, Movie *movie) {
-    UNUSED(watchlist);
-    UNUSED(movie);
-    return INCOMPLETE;
+    if (watchlist == NULL || movie == NULL) {
+        return FAILURE;
+    }
+
+    WatchlistNode* cur_node = watchlist->head;
+
+    while (cur_node != NULL) {
+        if (cur_node->movie->name == movie->name && 
+            cur_node->movie->director == movie->director &&
+            cur_node->movie->releaseYear == movie->releaseYear) {
+            return SUCCESS;
+        }
+        cur_node = cur_node->next;
+    }
+
+    return FAILURE;
 }
 
 /** HEAP FUNCTIONS */
